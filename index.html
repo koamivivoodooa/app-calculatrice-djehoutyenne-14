@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ordinateur Djéhoutyen®</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#0b1020">
+
+<style>
+/* Reset & Fondamentaux App */
+body { 
+    font-family: Arial, sans-serif; 
+    background:#0b1020; 
+    color:#e5e7eb; 
+    text-align:center; 
+    padding: 10px; 
+    margin: 0;
+    /* Optimisations tactiles */
+    touch-action: manipulation; 
+    user-select: none; 
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+}
+
+/* En-tête avec logo.png */
+.app-header { padding: 15px 0 5px 0; }
+.app-logo { 
+    max-width: 140px; /* Taille discrète selon ton souhait */
+    height: auto; 
+    display: block; 
+    margin: 0 auto;
+}
+
+h2 { color:#22c55e; margin-top: 5px; font-weight: normal; margin-bottom: 8px; font-size: 1.1rem; }
+
+.header-info { font-size: 11px; color: #94a3b8; margin-bottom: 15px; line-height: 1.4; }
+.principe { margin: 10px auto; font-style: italic; color: #cbd5e1; max-width: 800px; font-size: 13px; padding: 0 10px; }
+
+/* Zone de Calcul */
+.container { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:10px;}
+canvas { background:#020617; border:1px solid #38bdf8; border-radius:50%; max-width: 160px; height: auto; display: block; margin: 0 auto; }
+h3 { font-size: 0.85rem; margin-bottom: 5px; color: #38bdf8; }
+
+/* Contrôles */
+.controls { 
+    margin: 15px auto; 
+    background: #111827; 
+    padding: 15px; 
+    border-radius: 15px; 
+    border: 1px solid #1e293b; 
+    display: block; 
+    max-width: 400px; 
+}
+.control-group { display: block; margin: 8px 0; text-align: left; }
+label { font-size: 11px; color: #38bdf8; margin-bottom: 3px; display: block; padding-left: 5px; }
+
+input, select { 
+    padding:10px; 
+    font-size:16px; 
+    background: #ffffff; 
+    color: #020617; 
+    border: 1px solid #38bdf8; 
+    border-radius: 8px; 
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+button { 
+    cursor: pointer; 
+    background: #38bdf8; 
+    color: #020617; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    border-radius: 8px; 
+    border: none; 
+    padding: 12px; 
+    margin: 5px 0; 
+    width: 100%; 
+    transition: 0.2s;
+}
+button:active { transform: scale(0.97); background: #22c55e; }
+button.clear { background:#7c2d12; color:#fff; margin-top: 10px; font-size: 0.8rem; }
+
+.log { 
+    width: 100%; 
+    max-width: 400px; 
+    margin: 15px auto; 
+    background:#020617; 
+    padding:12px; 
+    border: 1px solid #1e293b; 
+    height:120px; 
+    overflow-y: auto; 
+    text-align:left; 
+    font-family: monospace; 
+    border-radius: 10px; 
+    font-size: 11px; 
+    box-sizing: border-box; 
+}
+
+.footer { font-size:10px; color:#94a3b8; margin-top:30px; line-height: 1.6; padding: 20px; border-top: 1px solid #1e293b; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+    <img src="logo.png" alt="Djéhouty Logo" class="app-logo">
+</div>
+
+<h2>Calculatrice Djéhoutyenne</h2>
+
+<div class="header-info">
+    Calculatrice Djehoutyenne © 2026<br> 
+    Dodji Mahouignito Djehouty OLOU<br>
+    Ordinateur Djéhoutyen®
+</div>
+
+<p class="principe">Calcul par déplacements cycliques compilés.</p>
+
+<div class="container">
+    <div><h3>Anneau A</h3><canvas id="ringA" width="200" height="200"></canvas></div>
+    <div><h3>Anneau B</h3><canvas id="ringB" width="200" height="200"></canvas></div>
+    <div><h3>Anneau C</h3><canvas id="ringC" width="200" height="200"></canvas></div>
+</div>
+
+<div class="controls">
+    <div class="control-group">
+        <label>États (N)</label>
+        <input type="number" id="N" value="24" min="2" max="128">
+    </div>
+    <div class="control-group">
+        <label>Valeur 1</label>
+        <input type="number" id="a" value="5">
+    </div>
+    <div class="control-group">
+        <label>Opération</label>
+        <select id="op">
+            <option value="+">+</option><option value="-">−</option><option value="*">×</option>
+            <option value="/">÷</option><option value="sqrt">√</option><option value="pow">^</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>Valeur 2</label>
+        <input type="number" id="b" value="3">
+    </div>
+    
+    <button onclick="compileRun()">Compiler & Exécuter</button>
+    <button onclick="exportLog()">Exporter la trace</button>
+    <button class="clear" onclick="clearLog()">Effacer la trace</button>
+</div>
+
+<div id="log" class="log"></div>
+
+<div class="footer">
+    Licence : © 2026 Dodji Mahouignito Djehouty OLOU<br>
+    Usage personnel et pédagogique.
+</div>
+
+<script>
+// Enregistrement du Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+
+function drawRing(canvasId, pos, N, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const r = canvas.width / 2 - 15;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < N; i++) {
+        const ang = (2 * Math.PI * i) / N - Math.PI / 2;
+        ctx.beginPath(); ctx.arc(cx + r * Math.cos(ang), cy + r * Math.sin(ang), 3, 0, 2 * Math.PI);
+        ctx.fillStyle = "#475569"; ctx.fill();
+    }
+    const a = (2 * Math.PI * (pos % N)) / N - Math.PI / 2;
+    ctx.beginPath(); ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), 8, 0, 2 * Math.PI);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.stroke();
+}
+
+function compute(a, b, op) {
+    if (op === "+") return a + b;
+    if (op === "-" || op == "−") return a - b;
+    if (op === "*") return a * b;
+    if (op === "/") return b !== 0 ? a / b : 0;
+    if (op === "sqrt") return Math.sqrt(a);
+    if (op === "pow") return Math.pow(a, b);
+    return 0;
+}
+
+function compileRun() {
+    const N = parseInt(document.getElementById("N").value) || 24;
+    const a = parseFloat(document.getElementById("a").value) || 0;
+    const b = parseFloat(document.getElementById("b").value) || 0;
+    const op = document.getElementById("op").value;
+    const result = compute(a, b, op);
+    const k = result - a;
+
+    requestAnimationFrame(() => {
+        drawRing("ringA", a, N, "#38bdf8");     
+        drawRing("ringB", k, N, "#22c55e");     
+        drawRing("ringC", result, N, "#f59e0b"); 
+    });
+
+    const logDiv = document.getElementById("log");
+    logDiv.innerHTML += `> Result: ${result.toFixed(2)} (Shift: ${k.toFixed(2)})<br>`;
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function exportLog() {
+    const blob = new Blob([document.getElementById("log").innerText], {type: "text/plain"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "trace_djehouty.txt";
+    link.click();
+}
+
+function clearLog() { document.getElementById("log").innerHTML = ""; }
+
+window.onload = function() { setTimeout(compileRun, 300); };
+</script>
+</body>
+</html>
